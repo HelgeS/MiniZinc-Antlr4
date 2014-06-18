@@ -1,6 +1,6 @@
 grammar MiniZincGrammar;
 import MiniZincLexer;
-prog: (stat ';')+;
+model: (stat ';')+;
 stat: data
     | constraint
     | decl
@@ -9,6 +9,7 @@ stat: data
     | predicate
     | function
     | include
+    | init
     ;  
 
 decl : vardecl | pardecl;
@@ -18,12 +19,19 @@ pardecl : parameter | pararray;
 data: 'enum' ID '=' '{' constr(','constr)* '}';
 constraint : 'constraint'  expr;
 var : 'var' typename ':'  ID ;
-output :'output' '(' list ')' | 'output'  list ;
-solve : 'solve' 'satisfy';
+output :'output' '(' listExpr ')' | 'output'  listExpr ;
+solve : 'solve' (satisfy | optimize);
 parameter : 'par'? typename ':'  ID ('=' expr)?;
 include : 'include' stringExpr;
+init : ID '=' expr;
+
 predicate : 'predicate' ID'(' (decl(','decl)*)? ')' '=' expr;
 function : 'function';
+
+satisfy : 'satisfy';
+optimize : maximize | minimize;
+maximize : 'maximize' expr;
+minimize : 'minimize' expr;
 
 constr: scons | tcons;
 scons: ID ;
@@ -74,6 +82,9 @@ expr:  arithExpr
     |   setExpr
     |   forallExpr
     |   existsExpr
+    |   listExpr
+    |   letExpr
+    |   ifExpr
     ;
 
 arithExpr : operand
@@ -81,11 +92,13 @@ arithExpr : operand
     |   arithExpr infixOp expr
     |   arithExpr ('*'|'/') expr   
     |   arithExpr ('+'|'-') expr   
-    |   arithExpr ('<'|'>' |'>=' | '<=') expr     
+    |   arithExpr ('<'|'>' |'>=' | '<=') expr   
+    |   sumExpr
+    |   prodExpr
     |   '('arithExpr ')'
    ;
 
-operand : ID | integer;
+operand : ID | integer | arrayaccess ;
 
 notExpr        : 'not'  expr ;
 minusExpr      :  '-' '(' expr ')';
@@ -98,14 +111,36 @@ stringExpr : '"' string  '"';
 infixOp : '`' ID  '`';
 arrayaccess : ID '[' expr(','expr)* ']';
 
-list: '['(expr (','expr)*)? ']';
 
-// forall, exists
-forallExpr : 'forall' remainderQuantifier;
-existsExpr : 'exists' remainderQuantifier;
-remainderQuantifier : '(' inDecl (',' inDecl)*')' '(' expr ')';
+
+// lists
+listExpr: listValue 
+          | listExpr '++' expr
+          | oneDimList 
+          | multiDimList ;
+oneDimList :  simpleList | guardedList  ;
+simpleList : '[' (expr (','expr)*)? ']';
+guardedList : '[' (expr (','expr)*)? '|'  inDecl (',' inDecl)* ']' ;
+multiDimList : '[|' (expr (','expr)*)? ('|' (expr (','expr)*)?  )?  '|]' ;
+
+listValue : ID | ifExpr | arrayaccess | showExpr;
+showExpr : 'show' '(' expr ')';
+
+// forall, exists, sum, prod
+forallExpr : 'forall' guard_expr;
+existsExpr : 'exists' guard_expr;
+sumExpr : 'sum' guard_expr;
+prodExpr : 'prod' guard_expr;
+
+guard_expr : '(' inDecl (',' inDecl)*')' '(' expr ')';
 inDecl : ID 'in' range whereCond?;
 whereCond : 'where' expr;
+
+// let
+letExpr : 'let' '{' decl   (',' decl)* '}' 'in' expr;
+
+// if
+ifExpr : 'if' expr 'then' expr 'else' expr 'endif';
 
 // sets
 setExpr : bracketExpr | range;
@@ -123,7 +158,7 @@ rbool  : 'bool';
 integer : NAT | '-' NAT;
 
 
-string : ((~('"') | '\\n' | '.'))*;
+string : ((~('"') | ESC | '.'))*;
 //string : (ESC|.)*?;
-//ESC:'\\"' | '\\\\' | '\\n';
+ESC:'\\"' | '\\\\' | '\\n' | '\\t';
 
