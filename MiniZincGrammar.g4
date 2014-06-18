@@ -61,6 +61,7 @@ expr:  arithExpr
     |   expr '<-' expr   
     |   expr '<->' expr   
     |  expr ('=' | '==' | '!=') expr
+    |  expr  '`'ID'`' expr
 //    |   integer 
     |   notExpr  
     |   boolExpr
