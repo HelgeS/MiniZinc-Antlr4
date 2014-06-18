@@ -70,13 +70,10 @@ expr:  arithExpr
     |   expr '<->' expr   
     |  expr ('=' | '==' | '!=') expr
     |  expr  '`'ID'`' expr
-//    |   integer 
     |   notExpr  
     |   boolExpr
     |   stringExpr
-//    |   showExpr
     |   predOrUnionExpr    
-//    |   idexpr  
     |   arrayaccess               
     |   rbracketExpr
     |   setExpr
@@ -106,7 +103,6 @@ predOrUnionExpr: ID '('expr (','expr)*')';
 rbracketExpr    :  '(' expr ')';
 idexpr : ID;
 boolExpr :'true' | 'false' ;
-//showExpr : 'show' '(' ID ')';
 stringExpr : '"' string  '"';
 infixOp : '`' ID  '`';
 arrayaccess : ID '[' expr(','expr)* ']';
