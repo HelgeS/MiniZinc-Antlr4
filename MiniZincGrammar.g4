@@ -63,46 +63,84 @@ dimensions : '[' range  (','range)*']';
 
 typedata : ID'('integer')';
 
-expr:  arithExpr
-    |   expr ('/\\'|'\\/') expr     
-    |   expr '->' expr   
-    |   expr '<-' expr   
-    |   expr '<->' expr   
-    |  expr ('=' | '==' | '!=') expr
-    |  expr  '`'ID'`' expr
-    |   notExpr  
-    |   boolExpr
-    |   stringExpr
-    |   predOrUnionExpr    
-    |   arrayaccess               
+expr:  boolComplexExpr
+    |   arithComplexExpr
+    |   stringExpr 
     |   rbracketExpr
-    |   setExpr
+    | setExpr
+    | listExpr
+    | expr infixOp expr
+    | arrayaccess 
+    | ifExpr 
+    | letExpr 
+    | predOrUnionExpr 
+    | BOOL
+    | integer
+    | ID
+    | '_'
+        ;
+
+
+boolVal : ID 
+      | BOOL 
+      | arrayaccess 
+      | ifExpr 
+      | letExpr 
+      | predOrUnionExpr 
+      | '(' boolExpr ')'
+      ;
+
+boolComplexExpr:
+       arithExpr ('<'|'>' |'>=' | '<=') arithExpr   
+    |   boolExpr ('/\\'|'\\/') boolExpr     
+    |   boolExpr '->' boolExpr   
+    |   boolExpr '<-' boolExpr   
+    |   boolExpr '<->' boolExpr   
+    |   arithExpr ('=' | '==' | '!=') arithExpr
+    |   boolExpr ('=' | '==' | '!=') boolExpr
+    |   notExpr  
     |   forallExpr
     |   existsExpr
-    |   listExpr
-    |   letExpr
-    |   ifExpr
+;
+
+boolExpr : 
+       arithExpr ('<'|'>' |'>=' | '<=') arithExpr   
+    |   boolExpr ('/\\'|'\\/') boolExpr     
+    |   boolExpr '->' boolExpr   
+    |   boolExpr '<-' boolExpr   
+    |   boolExpr '<->' boolExpr   
+    |   arithExpr ('=' | '==' | '!=') arithExpr
+    |   boolExpr ('=' | '==' | '!=') boolExpr
+    |   notExpr  
+    |   forallExpr
+    |   existsExpr
+    |   boolVal
     ;
 
-arithExpr : operand
-    |   minusExpr
-    |   arithExpr infixOp expr
+operand : ID | integer | arrayaccess | ifExpr | letExpr |  '('arithExpr ')';
+arithComplexExpr :
+         minusExpr
     |   arithExpr ('*'|'/') expr   
     |   arithExpr ('+'|'-') expr   
-    |   arithExpr ('<'|'>' |'>=' | '<=') expr   
     |   sumExpr
     |   prodExpr
-    |   '('arithExpr ')'
+   ;
+  
+arithExpr : 
+         minusExpr
+    |   arithExpr ('*'|'/') expr   
+    |   arithExpr ('+'|'-') expr   
+    |   sumExpr
+    |   prodExpr
+    |   operand
    ;
 
-operand : ID | integer | arrayaccess ;
 
 notExpr        : 'not'  expr ;
 minusExpr      :  '-' '(' expr ')';
 predOrUnionExpr: ID '('expr (','expr)*')';
 rbracketExpr    :  '(' expr ')';
 idexpr : ID;
-boolExpr :'true' | 'false' ;
 stringExpr : '"' string  '"';
 infixOp : '`' ID  '`';
 arrayaccess : ID '[' expr(','expr)* ']';
@@ -117,7 +155,7 @@ listExpr: listValue
 oneDimList :  simpleList | guardedList  ;
 simpleList : '[' (expr (','expr)*)? ']';
 guardedList : '[' (expr (','expr)*)? '|'  inDecl (',' inDecl)* ']' ;
-multiDimList : '[|' (expr (','expr)*)? ('|' (expr (','expr)*)?  )?  '|]' ;
+multiDimList : '[|' (expr (','expr)*)? ('|' expr (','expr)*  )*  '|]' ;
 
 listValue : ID | ifExpr | arrayaccess | showExpr;
 showExpr : 'show' '(' expr ')';
@@ -128,8 +166,12 @@ existsExpr : 'exists' guard_expr;
 sumExpr : 'sum' guard_expr;
 prodExpr : 'prod' guard_expr;
 
-guard_expr : '(' inDecl (',' inDecl)*')' '(' expr ')';
-inDecl : ID 'in' range whereCond?;
+guard_expr : twoSections | oneSection;
+
+oneSection  : '(' listExpr ')';
+twoSections : '(' inDecl (',' inDecl)*')' '(' expr ')';
+
+inDecl : ID (','ID)* 'in' range whereCond?;
 whereCond : 'where' expr;
 
 // let
