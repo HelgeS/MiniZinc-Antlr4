@@ -1,7 +1,8 @@
 grammar MiniZincGrammar;
 import MiniZincLexer;
 model: (stat ';')+;
-stat: data
+stat: data  // union types
+    | extended // extended types
     | constraint
     | decl
     | solve
@@ -16,7 +17,13 @@ decl : vardecl | pardecl;
 vardecl : (var | vararray) ('=' expr)?;
 pardecl : parameter | pararray;
 
+// this is not MiniZinc standard!
 data: 'enum' ID '=' '{' constr(','constr)* '}';
+extended: 'extended' ID '=' (preExt '++')? typename ('++' postExt)?;
+listExtended : '[' ID(',' ID)* ']';
+preExt : listExtended;
+postExt : listExtended;
+
 constraint : 'constraint'  expr;
 var : 'var' typename ':'  ID ;
 output :'output' '(' listExpr ')' | 'output'  listExpr ;
@@ -28,7 +35,8 @@ init : ID '=' expr;
 
 // predicates and functions
 predicate : 'predicate' ID'(' (decl(','decl)*)? ')' '=' expr;
-function : 'function';
+function : 'function' 'var'? qualName '(' (decl(','decl)*)? ')' '=' expr;
+qualName : ID | ID ':' op;
 
 satisfy : 'satisfy';
 optimize : maximize | minimize;
@@ -79,7 +87,7 @@ pararray : 'array' dimensions 'of'  parameter;
 dimensions : '[' ((range  (','range)*) | 'int') ']';
 
 
-typedata : ID'('integer')';
+typedata : ID'('expr')';
 
 expr:  
     | rbracketExpr
@@ -92,7 +100,8 @@ expr:
     | letExpr 
     | guardExpr
     | predOrUnionExpr 
-    | stringExpr 
+    | stringExpr
+    | caseExpr        // union types 
     | BOOL
     | real
     | integer
@@ -112,15 +121,21 @@ boolVal :
       | guardExpr
       ;
 
+op : boolOp | arithOp;
+boolOp : '/\\'|'\\/'| 'xor'| '->'|'<-'|'<->' | '=' | '==' | '!=';
+arithOp:'<'|'>' |'>=' | '<=' | '=' | '==' | '!=' | 'in';
+qualBoolOp  : ID ':' boolOp;
+qualArithOp : ID ':' arithOp;
+
 boolComplexExpr:     
-     boolExpr ('/\\'|'\\/'| 'xor'| '->'|'<-'|'<->' | '=' | '==' | '!=') boolExpr  
-    |   arithExpr ('<'|'>' |'>=' | '<=' | '=' | '==' | '!=' | 'in' ) arithExpr       
+     boolExpr (boolOp|qualBoolOp)  boolExpr  
+    |   arithExpr (arithOp|qualArithOp) arithExpr       
     |   notExpr  
     ;
 
 boolExpr :      
-     boolExpr ('/\\'|'\\/'| 'xor' | '->'|'<-'|'<->' | '=' | '==' | '!=') boolExpr     
-    |   arithExpr ('<'|'>' |'>=' | '<=' | '=' | '==' | '!=' | 'in' ) expr
+     boolExpr (boolOp|qualBoolOp) boolExpr     
+    |   arithExpr (arithOp|qualArithOp) expr
     |   notExpr  
     |   boolVal
     ;
@@ -150,7 +165,7 @@ arithExpr :
 
 notExpr        : 'not'  expr ;
 minusExpr      :  '-'  arithExpr ;
-predOrUnionExpr: ID '('expr (','expr)*')';
+predOrUnionExpr: ID ('('expr (','expr)*')')?;
 rbracketExpr    :  '(' expr ')';
 idexpr : ID;
 stringExpr : '"' string  '"';
@@ -158,7 +173,9 @@ infixOp : '`' ID  '`'  | infixSetOp;
 infixSetOp : 'in' | 'intersect' | 'union' ;
 arrayaccess : ID '[' expr(','expr)* ']' | '[' (expr(','expr)*)? ']' '[' expr(','expr)* ']';
 
-
+// case expressions
+caseExpr   : 'case' ID 'of' (caseBranch ';')+ 'endcase';
+caseBranch : predOrUnionExpr '-->' expr;  
 
 // lists
 listExpr: listValue 
@@ -174,7 +191,7 @@ multiDimList : '[|' (expr (','expr)*)? ((',')?'|' expr (','expr)*  )*  '|]' ;
 listValue : stringExpr | ID | ifExpr | arrayaccess | showExpr | inDecl | functionExpr;
 showExpr : 'show' '(' expr ')';
 
-functionExpr : guardExpr;
+functionExpr : guardExpr; 
 
 guardExpr : forall | exists | sum | prod |max | min |  bool2int | alldifferent |
             array1d;
@@ -200,7 +217,8 @@ inDecl : ID (','ID)* 'in' setExpr whereCond?;
 whereCond : 'where' expr;
 
 // let
-letExpr : 'let' '{' decl   (',' decl)* '}' 'in' expr;
+letExpr : 'let' '{' letDecl   (',' letDecl)* '}' 'in' expr;
+letDecl : decl | constraint;
 
 // if
 ifExpr : 'if' bodyIf ;
@@ -212,8 +230,10 @@ elseifS : 'elseif' bodyIf;
 setVal : bracketExpr | range | guardedSet ;
 complexSetExpr :  setExpr infixSetOp setExpr;
 setExpr : setVal | setExpr infixSetOp setExpr;
-bracketExpr : '{'(expr (','expr)*)? '}';
-guardedSet : '{' (expr (','expr)*)? '|'  inDecl (',' inDecl)* '}' ;
+bracketExpr : '{' commaList '}';
+guardedSet : '{'  commaList '|' guard  '}' ;
+commaList :  (expr (','expr)*)?;
+guard :  inDecl (',' inDecl)*;
 
 
 range : fromR '..' toR
