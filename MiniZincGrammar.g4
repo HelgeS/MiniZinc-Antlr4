@@ -124,6 +124,7 @@ boolVal :
 op : boolOp | arithOp;
 boolOp : '/\\'|'\\/'| 'xor'| '->'|'<-'|'<->' | '=' | '==' | '!=';
 arithOp:'<'|'>' |'>=' | '<=' | '=' | '==' | '!=' | 'in';
+arithOp2 : '*'|'/'| 'div'| 'mod' | '+'|'-';
 qualBoolOp  : ID ':' boolOp;
 qualArithOp : ID ':' arithOp;
 
@@ -153,12 +154,12 @@ operand : ID
    
 arithComplexExpr :
          minusExpr
-    |   arithExpr ('*'|'/'| 'div'| 'mod' | '+'|'-') arithExpr   
+    |   arithExpr arithOp2 arithExpr   
    ;
   
 arithExpr : 
          minusExpr
-    |   arithExpr ('*'|'/'| 'div' | 'mod' | '+'|'-') arithExpr   
+    |   arithExpr arithOp2 arithExpr   
     |   operand
    ;
 
