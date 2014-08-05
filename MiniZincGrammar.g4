@@ -172,7 +172,10 @@ idexpr : ID;
 stringExpr : '"' string  '"';
 infixOp : '`' ID  '`'  | infixSetOp;
 infixSetOp : 'in' | 'intersect' | 'union' ;
-arrayaccess : ID '[' expr(','expr)* ']' | '[' (expr(','expr)*)? ']' '[' expr(','expr)* ']';
+
+// either id[e1...en] or [a1...an][e1...en]
+arrayaccess : ID simpleNonEmptyList | simpleNonEmptyList simpleNonEmptyList;
+
 
 // case expressions
 caseExpr   : 'case' ID 'of' (caseBranch ';')+ 'endcase';
@@ -185,7 +188,8 @@ listExpr: listValue
           | multiDimList ;
 oneDimList :  simpleList | guardedList  ;
 // the , at the end is allowed by MiniZinc
-simpleList : '[' (expr (','expr)*)? (',')? ']';
+simpleList : '[' ']' | simpleNonEmptyList;
+simpleNonEmptyList : '[' expr(','expr)* ']';
 guardedList : '[' (expr (','expr)*)? '|'  inDecl (',' inDecl)* ']' ;
 multiDimList : '[|' (expr (','expr)*)? ((',')?'|' expr (','expr)*  )*  '|]' ;
 
