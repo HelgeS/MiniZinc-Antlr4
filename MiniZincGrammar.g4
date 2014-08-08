@@ -76,7 +76,7 @@ argrange : range;
 typename : rint
          | rbool
          | rfloat 
-         | ID 
+         | ID		// for extension types or sets as ranges
          | typedata
          | range
          | typeset
@@ -87,7 +87,7 @@ pararray : 'array' dimensions 'of'  parameter;
 dimensions : '[' ((range  (','range)*) | 'int') ']';
 
 
-typedata : ID'('expr')';
+typedata : ID'('arithExpr')';
 
 expr:  
     | rbracketExpr
@@ -205,13 +205,11 @@ exists : 'exists'  guardExprArg;
 sum : 'sum'  guardExprArg;
 prod : 'prod'  guardExprArg;
 max : 'max'  guardExprArg | 'max' '(' expr ',' expr ')';
-min : 'min'  guardExprArg | 'max' '(' expr ',' expr ')';
+min : 'min'  guardExprArg | 'min' '(' expr ',' expr ')';
 bool2int : 'bool2int' '('expr')';
 alldifferent : 'alldifferent' guardExprArg;
 array1d : 'array1d' '(' expr ',' expr ')';
 
-// forall, exists, sum, prod
-//guardExpr : ID guardExprArg;
 
 guardExprArg : twoSections | oneSection;
 
