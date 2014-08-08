@@ -98,7 +98,6 @@ expr:
     | expr infixOp expr
     | ifExpr 
     | letExpr 
-    | guardExpr
     | predOrUnionExpr 
     | stringExpr
     | caseExpr        // union types 
@@ -118,7 +117,6 @@ boolVal :
       | ifExpr 
       | letExpr 
       | predOrUnionExpr 
-      | guardExpr
       ;
 
 op : boolOp | arithOp;
@@ -136,7 +134,7 @@ boolComplexExpr:
 
 boolExpr :      
      boolExpr (boolOp|qualBoolOp) boolExpr     
-    |   arithExpr (arithOp|qualArithOp) expr
+    |   arithExpr (arithOp|qualArithOp) arithExpr
     |   notExpr  
     |   boolVal
     ;
@@ -166,11 +164,15 @@ arithExpr :
 
 notExpr        : 'not'  expr ;
 minusExpr      :  '-'  arithExpr ;
-predOrUnionExpr: ID ('('expr (','expr)*')')?;
+
+predOrUnionExpr: ID (twosections | onesection);
+onesection :  ('('expr (','expr)*')')?;
+twosections : '(' guard ')' '(' expr ')';
+
 rbracketExpr    :  '(' expr ')';
 idexpr : ID;
 stringExpr : '"' string  '"';
-infixOp : '`' ID  '`'  | infixSetOp;
+infixOp : '`' ID  '`' | infixSetOp;
 infixSetOp : 'in' | 'intersect' | 'union' ;
 
 // either id[e1...en] or [a1...an][e1...en]
@@ -183,41 +185,23 @@ caseBranch : predOrUnionExpr '-->' expr;
 
 // lists
 listExpr: listValue 
-          | listExpr '++' expr
+          | listExpr '++' listExpr
           | oneDimList 
           | multiDimList ;
 oneDimList :  simpleList | guardedList  ;
 // the , at the end is allowed by MiniZinc
 simpleList : '[' ']' | simpleNonEmptyList;
 simpleNonEmptyList : '[' expr(','expr)* ']';
-guardedList : '[' (expr (','expr)*)? '|'  inDecl (',' inDecl)* ']' ;
-multiDimList : '[|' (expr (','expr)*)? ((',')?'|' expr (','expr)*  )*  '|]' ;
+guardedList : '[' (expr (','expr)*) '|'  guard ']' ;
+multiDimList : '[|' (expr (','expr)*) ((',')?'|' expr (','expr)*  )*  '|]' ;
 
-listValue : stringExpr | ID | ifExpr | arrayaccess | showExpr | inDecl | functionExpr;
-showExpr : 'show' '(' expr ')';
+listValue : stringExpr | ID | ifExpr | arrayaccess | functionExpr;
 
-functionExpr : guardExpr; 
+functionExpr : predOrUnionExpr; 
 
-guardExpr : forall | exists | sum | prod |max | min |  bool2int | alldifferent |
-            array1d;
-forall : 'forall' guardExprArg;
-exists : 'exists'  guardExprArg;
-sum : 'sum'  guardExprArg;
-prod : 'prod'  guardExprArg;
-max : 'max'  guardExprArg | 'max' '(' expr ',' expr ')';
-min : 'min'  guardExprArg | 'min' '(' expr ',' expr ')';
-bool2int : 'bool2int' '('expr')';
-alldifferent : 'alldifferent' guardExprArg;
-array1d : 'array1d' '(' expr ',' expr ')';
-
-
-guardExprArg : twoSections | oneSection;
-
-oneSection  : '(' listExpr ')';
-twoSections : '(' inDecl (',' inDecl)*')' '(' expr ')';
 
 inDecl : ID (','ID)* 'in' setExpr whereCond?;
-whereCond : 'where' expr;
+whereCond : 'where' boolExpr;
 
 // let
 letExpr : 'let' '{' letDecl   (',' letDecl)* '}' 'in' expr;
@@ -231,11 +215,10 @@ elseifS : 'elseif' bodyIf;
 
 // sets
 setVal : bracketExpr | range | guardedSet ;
-complexSetExpr :  setExpr infixSetOp setExpr;
 setExpr : setVal | setExpr infixSetOp setExpr;
-bracketExpr : '{' commaList '}';
-guardedSet : '{'  commaList '|' guard  '}' ;
-commaList :  (expr (','expr)*)?;
+bracketExpr : '{' '}' | '{'  commaList '}';
+guardedSet : '{'  expr '|' guard  '}' ;
+commaList :  (expr (','expr)*);
 guard :  inDecl (',' inDecl)*;
 
 
