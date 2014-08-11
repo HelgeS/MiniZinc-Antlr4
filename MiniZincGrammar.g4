@@ -60,18 +60,8 @@ constrainchoice: 'indomain'
 
 constr: scons | tcons;
 scons: ID ;
-tcons: ID '('arg (','arg)*')' ;
-arg : argint 
-    | argfloat
-    | argbool
-    | argunion
-    | argrange
-    ;
-argint   : rint;
-argfloat : rfloat;
-argbool  : rbool;
-argunion : ID;
-argrange : range;
+tcons: ID '('typename (','typename)*')' ;
+
 
 typename : rint
          | rbool
@@ -95,12 +85,12 @@ expr:
     | arithComplexExpr
     | setExpr    
     | listExpr
-    | expr infixOp expr
     | ifExpr 
     | letExpr 
     | predOrUnionExpr 
     | stringExpr
     | caseExpr        // union types 
+    | expr infixOp expr
     | BOOL
     | real
     | integer
@@ -147,7 +137,6 @@ operand : ID
     | letExpr 
     |  '('arithExpr ')'
     | predOrUnionExpr 
-    | functionExpr
     ;
    
 arithComplexExpr :
@@ -165,9 +154,10 @@ arithExpr :
 notExpr        : 'not'  expr ;
 minusExpr      :  '-'  arithExpr ;
 
-predOrUnionExpr: ID (twosections | onesection);
+predOrUnionExpr: ID (twosections | onesection) ;
 onesection :  ('('expr (','expr)*')')?;
 twosections : '(' guard ')' '(' expr ')';
+
 
 rbracketExpr    :  '(' expr ')';
 idexpr : ID;
@@ -191,14 +181,12 @@ listExpr: listValue
 oneDimList :  simpleList | guardedList  ;
 // the , at the end is allowed by MiniZinc
 simpleList : '[' ']' | simpleNonEmptyList;
-simpleNonEmptyList : '[' expr(','expr)* ']';
-guardedList : '[' (expr (','expr)*) '|'  guard ']' ;
-multiDimList : '[|' (expr (','expr)*) ((',')?'|' expr (','expr)*  )*  '|]' ;
+simpleNonEmptyList : '[' nonEmptyListElems ']';
+guardedList : '[' nonEmptyListElems '|'  guard ']' ;
+multiDimList : '[|' nonEmptyListElems ((',')?'|' nonEmptyListElems  )*  '|]' ;
+nonEmptyListElems : expr (','expr)*;
 
-listValue : stringExpr | ID | ifExpr | arrayaccess | functionExpr;
-
-functionExpr : predOrUnionExpr; 
-
+listValue : stringExpr | ID | ifExpr | arrayaccess | predOrUnionExpr;
 
 inDecl : ID (','ID)* 'in' setExpr whereCond?;
 whereCond : 'where' boolExpr;

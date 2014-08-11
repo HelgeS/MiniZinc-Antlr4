@@ -1,0 +1,20 @@
+constraint
+	alldifferent(nation) /\
+	alldifferent(colour) /\
+	alldifferent(animal) /\
+	alldifferent(drink) /\
+	alldifferent(smoke) /\
+	nation[English] == colour[Red] /\
+	nation[Spanish] == animal[Dog] /\
+	drink[Coffee] == colour[Green] /\
+        nation[Ukrainian] == drink[Tea] /\
+        colour[Green] `rightof` colour[Ivory] /\
+        smoke[OldGold] == animal[Snails] /\
+        smoke[Kools] == colour[Yellow] /\
+        middle(drink[Milk]) /\
+        left(nation[Norwegian]) /\
+        smoke[Chesterfields] `nextto` animal[Fox] /\
+        smoke[Kools] `nextto` animal[Horse] /\
+        smoke[LuckyStrike] == drink[OrangeJuice] /\
+        nation[Japanese] == smoke[Parliaments] /\
+        nation[Norwegian] `nextto` colour[Blue];
