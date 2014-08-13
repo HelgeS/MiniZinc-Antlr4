@@ -25,7 +25,7 @@ preExt : listExtended;
 postExt : listExtended;
 
 constraint : 'constraint'  expr;
-var : 'var' typename ':'  ID ;
+var : varmark typename ':'  ID ;
 output :'output' '(' listExpr ')' | 'output'  listExpr ;
 solve : 'solve' (annotation)? (satisfy | optimize);
 parameter : 'par'? typename ':'  ID ('=' expr)?;
@@ -35,8 +35,10 @@ init : ID '=' expr;
 
 // predicates and functions
 predicate : 'predicate' ID'(' (decl(','decl)*)? ')' '=' expr;
-function : 'function' 'var'? qualName '(' (decl(','decl)*)? ')' '=' expr;
-qualName : ID | ID ':' op;
+function : 'function' varmark? qualName '(' (decl(','decl)*)? ')' '=' expr;
+qualName : ID |  op':'ID | op extendsmark ID;
+varmark : 'var';
+extendsmark : 'extends';
 
 satisfy : 'satisfy';
 optimize : maximize | minimize;
@@ -161,7 +163,7 @@ twosections : '(' guard ')' '(' expr ')';
 
 rbracketExpr    :  '(' expr ')';
 idexpr : ID;
-stringExpr : '"' string  '"';
+stringExpr :  string  ;
 infixOp : '`' ID  '`' | infixSetOp;
 infixSetOp : 'in' | 'intersect' | 'union' ;
 
@@ -222,7 +224,9 @@ rbool  : 'bool';
 integer : NAT | '-' NAT;
 real : integer '.' NAT;
 
-string : ((~('"') | ESC | '.' | '^'| '#'))*;
+string : STRING;
+
+STRING: '"' ((~('"') | ESC | '.' | '^'| '#'))* '"';
 //string : (ESC|.)*?;
 ESC:'\\"' | '\\\\' | '\\n' | '\\t';
 
