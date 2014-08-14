@@ -1,7 +1,4 @@
-zebra:
-nation = [3, 4, 2, 1, 5]
-colour = [3, 5, 4, 1, 2]
-animal = [4, 1, 2, 5, 3]
-drink  = [5, 2, 3, 4, 1]
-smoke  = [3, 1, 2, 4, 5]
+tiny TSP:
+total distance = 5.650281539872885
+tour = 3, 4, 2, 1
 ----------

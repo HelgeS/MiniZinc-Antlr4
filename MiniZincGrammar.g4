@@ -82,22 +82,21 @@ dimensions : '[' ((range  (','range)*) | 'int') ']';
 typedata : ID'('arithExpr')';
 
 expr:  
-    | rbracketExpr
-    | boolComplexExpr
-    | arithComplexExpr
-    | setExpr    
-    | listExpr
-    | ifExpr 
-    | letExpr 
-    | predOrUnionExpr 
-    | stringExpr
-    | caseExpr        // union types 
-    | expr infixOp expr
+     ID
+    | '_'
     | BOOL
     | real
     | integer
-    | ID
-    | '_'
+    | predOrUnionExpr 
+    | rbracketExpr
+    | ifExpr 
+    | letExpr 
+    | listExpr
+    | boolComplexExpr
+    | arithComplexExpr
+    | setExpr    
+    | caseExpr        // union types 
+    | expr infixOp expr
         ;
 
 
@@ -118,11 +117,11 @@ arithOp2 : '*'|'/'| 'div'| 'mod' | '+'|'-';
 qualBoolOp  : ID ':' boolOp;
 qualArithOp : ID ':' arithOp;
 
-boolComplexExpr:     
-     boolExpr (boolOp|qualBoolOp)  boolExpr  
-    |   arithExpr (arithOp|qualArithOp) arithExpr       
-    |   notExpr  
-    ;
+boolComplexExpr:
+boolExpr (boolOp|qualBoolOp) boolExpr
+| arithExpr (arithOp|qualArithOp) arithExpr
+| notExpr
+;
 
 boolExpr :      
      boolExpr (boolOp|qualBoolOp) boolExpr     
@@ -140,12 +139,12 @@ operand : ID
     |  '('arithExpr ')'
     | predOrUnionExpr 
     ;
-   
+
 arithComplexExpr :
-         minusExpr
-    |   arithExpr arithOp2 arithExpr   
-   ;
-  
+minusExpr
+| arithExpr arithOp2 arithExpr
+;
+   
 arithExpr : 
          minusExpr
     |   arithExpr arithOp2 arithExpr   
@@ -157,7 +156,7 @@ notExpr        : 'not'  expr ;
 minusExpr      :  '-'  arithExpr ;
 
 predOrUnionExpr: ID (twosections | onesection) ;
-onesection :  ('('expr (','expr)*')')?;
+onesection :  '('(expr (','expr)*)?')';
 twosections : '(' guard ')' '(' expr ')';
 
 
@@ -183,10 +182,10 @@ listExpr: listValue
 oneDimList :  simpleList | guardedList  ;
 // the , at the end is allowed by MiniZinc
 simpleList : '[' ']' | simpleNonEmptyList;
-simpleNonEmptyList : '[' nonEmptyListElems ']';
+simpleNonEmptyList : '[' nonEmptyListElems(',')? ']';
 guardedList : '[' nonEmptyListElems '|'  guard ']' ;
-multiDimList : '[|' nonEmptyListElems ((',')?'|' nonEmptyListElems  )*  '|]' ;
-nonEmptyListElems : expr (','expr)*;
+multiDimList : '[|' nonEmptyListElems ((',')? '|' nonEmptyListElems  )* ('|')? '|]' ;
+nonEmptyListElems : expr (',' expr)*;
 
 listValue : stringExpr | ID | ifExpr | arrayaccess | predOrUnionExpr;
 
