@@ -36,9 +36,10 @@ init : ID '=' expr;
 // predicates and functions
 predicate : 'predicate' ID'(' (decl(','decl)*)? ')' '=' expr;
 function : 'function' varmark? qualName '(' (decl(','decl)*)? ')' '=' expr;
-qualName : ID |  op':'ID | op extendsmark ID;
+qualName : ID |  ID':'opOrID | opOrID extendsmark opOrID;
 varmark : 'var';
 extendsmark : 'extends';
+opOrID : op | ID;
 
 satisfy : 'satisfy';
 optimize : maximize | minimize;
@@ -172,7 +173,7 @@ arrayaccess : ID simpleNonEmptyList | simpleNonEmptyList simpleNonEmptyList;
 
 // case expressions
 caseExpr   : 'case' ID 'of' (caseBranch ';')+ 'endcase';
-caseBranch : predOrUnionExpr '-->' expr;  
+caseBranch : (predOrUnionExpr|ID) '-->' expr;  
 
 // lists
 listExpr: listValue 

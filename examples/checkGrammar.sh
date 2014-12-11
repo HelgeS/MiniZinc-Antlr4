@@ -5,4 +5,8 @@ do
 echo processing $file
 $grun MiniZincGrammar model < $file
 done
-
+for file in u/*.mzn
+do
+echo processing $file
+$grun MiniZincGrammar model < $file
+done

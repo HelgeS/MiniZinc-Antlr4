@@ -1,12 +1,29 @@
-include "alldifferent.mzn";
-int:n_cities = 4;
-set of int:cities = 1..n_cities;
-array [cities] of  float:x = [0.0,1.0,2.0,2.0];
-array [cities] of  float:y = [3.0,1.0,2.0,0.0];
-array [cities,cities] of  float:d = array2d(cities,cities,[sqrt((x[a] - x[b]) * (x[a] - x[b]) + (y[a] - y[b]) * (y[a] - y[b])) | a,b in cities]);
-array [cities] of  var cities:visit;
-var float:dist = sum(i in cities where i < n_cities)(d[visit[i],visit[i + 1]]);
-constraint alldifferent(visit);
-solve  satisfy;
-output(["tiny TSP:\n","total distance = ",show(dist),"\n","tour = ",show(visit[1]),", ",show(visit[2]),", ",show(visit[3]),", ",show(visit[4]),"\n"]);
+% MiniZinc Model parsed using Antlr4
+% Rafael Caballero, 2014
+
+
+
+% Data Section
+enum op= {sum,minus,prod,divi};
+enum tree= {leaf(2..3),node(op,tree,tree)};
+
+% Declarations Section
+var 1..2:t;
+var 1..4:t_2_1;
+var 1..2:t_2_2;
+var 1..4:t_2_2_2_1;
+var 1..2:t_2_2_2_2;
+var 1..2:t_2_2_2_3;
+var 1..2:t_2_3;
+var 1..4:t_2_3_2_1;
+var 1..2:t_2_3_2_2;
+var 1..2:t_2_3_2_3;
+
+% Constraints Section
+constraint t != node(sum,leaf(2),leaf(3));
+constraint t != 1 ->  /\ t = 1 -> true /\ t != 2 -> t_2_1 = 1 /\ t_2_2 = 1 /\ t_2_2_2_1 = 1 /\ t_2_2_2_2 = 1 /\ t_2_2_2_3 = 1 /\ t_2_3 = 1 /\ t_2_3_2_1 = 1 /\ t_2_3_2_2 = 1 /\ t_2_3_2_3 = 1 /\ t = 2 -> t_2_1 != 1 ->  /\ t_2_1 = 1 ->  /\ t_2_1 != 2 ->  /\ t_2_1 = 2 ->  /\ t_2_1 != 3 ->  /\ t_2_1 = 3 ->  /\ t_2_1 != 4 ->  /\ t_2_1 = 4 ->  /\ t_2_2 != 1 ->  /\ t_2_2 = 1 -> true /\ t_2_2 != 2 -> t_2_2_2_1 = 1 /\ t_2_2_2_2 = 1 /\ t_2_2_2_3 = 1 /\ t_2_2 = 2 -> true /\ t_2_2_2_2 != 1 /\ t_2_2_2_2 != 2 /\ t_2_2_2_3 != 1 /\ t_2_2_2_3 != 2 /\ t_2_3 != 1 ->  /\ t_2_3 = 1 -> true /\ t_2_3 != 2 -> t_2_3_2_1 = 1 /\ t_2_3_2_2 = 1 /\ t_2_3_2_3 = 1 /\ t_2_3 = 2 -> true /\ t_2_3_2_2 != 1 /\ t_2_3_2_2 != 2 /\ t_2_3_2_3 != 1 /\ t_2_3_2_3 != 2;
+
+% Output Section
+output(["t: ",show(t),"\n"]);
+
 
