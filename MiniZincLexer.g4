@@ -1,7 +1,7 @@
 lexer grammar MiniZincLexer;
 
 SINGLE_LINE_COMMENT : '%' ~[\r\n]* -> skip ;
-ID :  [a-zA-Z][a-zA-Z0-9'_']* ;
+ID :  [a-zA-Z][a-zA-Z0-9_]* ;
 NAT : [0-9]+ ; 
 WS : [ \t\r\n]+ -> skip;
 BOOL : 'true' | 'false';

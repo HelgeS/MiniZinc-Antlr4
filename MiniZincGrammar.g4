@@ -1,6 +1,6 @@
 grammar MiniZincGrammar;
 import MiniZincLexer;
-model: (stat ';')+;
+model: (stat ';' | SINGLE_LINE_COMMENT)+;
 stat: data  // union types
     | extended // extended types
     | constraint
@@ -11,7 +11,7 @@ stat: data  // union types
     | function
     | include
     | init
-    ;  
+    ;
 
 decl : vardecl | pardecl;
 vardecl : (var | vararray) ('=' expr)?;
@@ -71,13 +71,13 @@ typename : rint
          | rfloat 
          | ID		// for extension types or sets as ranges
          | typedata
-         | range
+         | range_dec
          | typeset
           ;
 typeset : 'set' 'of' typename;
 vararray : 'array' dimensions 'of' var;
 pararray : 'array' dimensions 'of'  parameter;
-dimensions : '[' ((range  (','range)*) | 'int') ']';
+dimensions : '[' ((range_dec  (','range_dec)*) | 'int') ']';
 
 
 typedata : ID'('arithExpr')';
@@ -204,7 +204,7 @@ elseS : 'else' expr 'endif';
 elseifS : 'elseif' bodyIf;
 
 // sets
-setVal : bracketExpr | range | guardedSet ;
+setVal : bracketExpr | range_dec | guardedSet ;
 setExpr : setVal | setExpr infixSetOp setExpr;
 bracketExpr : '{' '}' | '{'  commaList '}';
 guardedSet : '{'  expr '|' guard  '}' ;
@@ -212,7 +212,7 @@ commaList :  (expr (','expr)*);
 guard :  inDecl (',' inDecl)*;
 
 
-range : fromR '..' toR
+range_dec : fromR '..' toR
       | ID
       ;
 
@@ -229,4 +229,3 @@ string : STRING;
 STRING: '"' ((~('"') | ESC | '.' | '^'| '#'))* '"';
 //string : (ESC|.)*?;
 ESC:'\\"' | '\\\\' | '\\n' | '\\t';
-
